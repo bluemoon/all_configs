@@ -1,0 +1,228 @@
+; -*- tab-width: 4 -*-
+; Adding the main directory
+(setq load-path (cons "~/emacs/" load-path))
+;; Python specific
+(add-to-list 'load-path "~/emacs/python/")
+;; Git specific
+(add-to-list 'load-path "~/emacs/git-emacs/")
+(add-to-list 'load-path "~/emacs/snippets/yasnippet")
+(add-to-list 'load-path "~/emacs/org/")
+(add-to-list 'load-path "~/emacs/vendor")
+
+(progn (cd "~/emacs/vendor")
+       (normal-top-level-add-subdirs-to-load-path))
+
+(require 'python)
+(require 'auto-complete)
+(require 'yasnippet)
+
+
+(autoload 'python-mode "python-mode" "Python Mode." t)
+(add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
+(add-to-list 'interpreter-mode-alist '("python" . python-mode))
+
+;; Initialize Pymacs                                  
+;(autoload 'pymacs-apply "pymacs")
+;(autoload 'pymacs-call "pymacs")
+;(autoload 'pymacs-eval "pymacs" nil t)
+;(autoload 'pymacs-exec "pymacs" nil t)
+;(autoload 'pymacs-load "pymacs" nil t)
+
+;; Initialize Rope
+;(pymacs-load "ropemacs" "rope-")
+;(setq ropemacs-enable-autoimport t)
+
+;; Initialize Yasnippet
+;; Don't map TAB to yasnippet
+;; In fact, set it to something we'll never use because
+;; we'll only ever trigger it indirectly.
+(setq yas/trigger-key (kbd "C-c <kp-multiply>"))
+(yas/initialize)
+(yas/load-directory "~/emacs/snippets/yasnippet/snippets")
+
+(require 'auto-complete)
+(global-auto-complete-mode t)
+
+
+;; for fancy M-x
+(require 'smex)
+(smex-initialize)
+
+(require 'org)
+;; Fancy line numbering
+
+(require 'linum)
+(global-linum-mode 1)
+
+;; Ido mode
+(require 'ido)
+
+(ido-mode t)
+
+(setq ido-enable-flex-matching t)
+(setq ido-execute-command-cache nil)
+
+(add-hook 'ido-setup-hook 
+  (lambda ()
+    (define-key ido-completion-map [tab] 'ido-complete)
+  )
+)
+
+;; Git!
+(require 'git-emacs)
+;; Yasnippet
+
+
+
+(require 'yasnippet)
+(yas/initialize)
+(yas/load-directory "~/emacs/snippets/yasnippet/snippets")
+
+
+
+;; i like to close emacs randomly!
+(setq confirm-kill-emacs
+      (lambda (e)
+        (y-or-n-p-with-timeout
+         "Really exit Emacs (automatically exits in 5 secs)? " 5 t)))
+
+;; Tabbing
+(setq tab-width 4)
+(setq indent-tabs-mode nil) 
+
+;; Truncation
+(setq default-truncate-lines t)
+;; Show my parenthese
+(show-paren-mode t)
+
+
+(global-set-key (kbd "<mouse-8>") 'previous-buffer)
+(global-set-key (kbd "<mouse-9>") 'next-buffer)
+
+
+(global-set-key [f1] 'help)
+(global-set-key [f2] 'rope-rename)
+(global-set-key [f9] 'compile)
+(global-set-key [f12] 'toggle-truncate-lines)
+
+
+(global-set-key "\C-j" 'indent-region)
+(global-set-key "\C-x\C-k" 'kill-buffer)
+(global-set-key "\C-c\C-e" 'flymake-display-err-menu-for-current-line)
+(global-set-key (kbd "M-x") 'smex)
+(global-set-key (kbd "M-X") 'smex-major-mode-commands)
+(global-set-key (kbd "C-c M-x") 'smex-update-and-run)
+
+;; This is your old M-x.
+(global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
+;; Happy git!
+(global-set-key (kbd "C-x c") 'git-commit-all)
+;; Have a menu for all your previous kills
+(global-set-key "\C-cy" '(lambda ()
+                                 (interactive)
+                                 (popup-menu 'yank-menu)))
+
+;; Get rid of funky gui features
+(setq x-select-enable-clipboard t)       ;; use the X copy/paste
+(scroll-bar-mode t)                      ;; show a scrollbar...
+(set-scroll-bar-mode 'right)             ;; on the right
+(global-font-lock-mode t)                ;; always do syntax highlighting 
+(setq require-final-newline t)           ;; end files with a newline
+
+;; Custom options
+(define-key minibuffer-local-map [tab] 'minibuffer-complete)
+(setq org-agenda-files (quote ("~/projects/org/projects.org")))
+;; File type list
+(add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+(add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
+(add-to-list 'interpreter-mode-alist '("python" . python-mode))
+(autoload 'octave-mode "octave-mod" nil t)
+(setq auto-mode-alist
+      (cons '("\\.m$" . octave-mode) auto-mode-alist))
+
+
+(tool-bar-mode -1)
+;(menu-bar-mode -1)
+(toggle-scroll-bar -1)
+
+
+;; CC-MODE modifiers
+(require 'cc-mode)
+(defun my-c++-mode-hook()
+  (require 'etags)
+  (require 'xcscope)
+  (setq cscope-do-not-update-database t)
+  (setq tab-width 4)
+  (setq c-basic-offset 4)
+  (setq c++-auto-hungry-initial-state 'none)
+  (setq c++-delete-function 'backward-delete-char)
+  (setq c-continued-statement-offset 4)
+  (setq c++-empty-arglist-indent 4)
+  (c-set-offset 'substatement-open 0)
+  (setq c-subword-mode 1)
+  (setq c-syntactic-indentation nil)
+)
+;; Auto Syntax Error Hightlight  
+(defun my-python-hook()
+  (require 'flymake)
+  (setq c-subword-mode 1)
+  (indent-tabs-mode nil)
+  (setq tab-width 4)
+  (setq c-basic-offset 4)
+  (when (load "flymake") t)
+  (defun flymake-pyflakes-init()
+    (let* ((temp-file (flymake-init-create-temp-buffer-copy  
+              'flymake-create-temp-inplace))  
+              (local-file (file-relative-name  
+              temp-file  
+              (file-name-directory buffer-file-name))))  
+              (list "pyflakes" (list local-file)))  
+              (add-to-list 'flymake-allowed-file-name-masks  
+ 	     '("\\.py\\'" flymake-pyflakes-init)
+        )
+     )
+  )
+(defun flymake-python-load ()
+  (interactive)
+  (set (make-local-variable 'flymake-allowed-file-name-masks)
+       flymake-python-allowed-file-name-masks)
+  (flymake-mode t))
+
+(defvar flymake-python-allowed-file-name-masks '(("\\.py\\'" flymake-python-init)))
+(defvar flymake-python-pyflakes-executable "pyflakes")
+
+;; CC-MODE hook
+(add-hook 'c-mode-common-hook 'my-c++-mode-hook)
+;; Python mode hook
+(add-hook 'python-mode-hook 'my-python-hook)
+
+(set-fontset-font (frame-parameter nil 'font)
+                   'han '("STHeiti" . "unicode-bmp"))
+;; Many custom set variables
+(custom-set-variables 
+  ;; custom-set-variables was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(ecb-tree-indent 3)
+ '(indent-tabs-mode nil)
+ '(inhibit-startup-screen t))
+
+(custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(default ((t (:stipple nil :background "#272822" :foreground "#F8F8F2" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 120 :width normal))))
+ '(cursor ((t (:background "#F8F8F2" :foreground "#272822"))))
+ '(font-lock-comment-face ((((class color) (min-colors 88) (background dark)) (:foreground "#75715E"))))
+ '(font-lock-function-name-face ((((class color) (min-colors 88) (background dark)) (:foreground "#A6E22E"))))
+ '(font-lock-keyword-face ((((class color) (min-colors 88) (background dark)) (:foreground "#F92672"))))
+ '(font-lock-preprocessor-face ((t (:inherit font-lock-builtin-face :foreground "#66d9ef"))))
+ '(font-lock-string-face ((((class color) (min-colors 88) (background dark)) (:foreground "#E6DB74"))))
+ '(font-lock-type-face ((((class color) (min-colors 88) (background dark)) (:foreground "#66d9ef"))))
+ '(font-lock-variable-name-face ((((class color) (min-colors 88) (background dark)) (:foreground "#FD971F"))))
+ '(region ((((class color) (min-colors 88) (background dark)) (:background "#49483E"))))
+ '(show-paren-match ((((class color) (background dark)) (:background "#3E3D32")))))
+
+
