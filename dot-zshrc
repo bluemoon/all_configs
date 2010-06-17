@@ -71,3 +71,8 @@ setopt extendedglob
 
 alias mostused="cut -d\    -f 1 ~/.zsh_hist | sort | uniq -c | sort -rn | head -n 10 | sed 's/.*/    &/g'"
 alias emacs="emacs -nw"
+export EDITOR="emacs -nw"
+export DISTCC_HOSTS="192.168.1.143"
+export CC="ccache cc"
+export CXX="ccache gcc"
+export MAKEFLAGS="-j4"

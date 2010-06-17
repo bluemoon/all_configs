@@ -1,64 +1,76 @@
-; -*- tab-width: 4 -*-
+; -*- mode: lisp; tab-width: 4 -*-
 ; Adding the main directory
-(setq load-path (cons "~/emacs/" load-path))
-;; Python specific
-(add-to-list 'load-path "~/emacs/python/")
-;; Git specific
-(add-to-list 'load-path "~/emacs/git-emacs/")
-(add-to-list 'load-path "~/emacs/snippets/yasnippet")
-(add-to-list 'load-path "~/emacs/org/")
-(add-to-list 'load-path "~/emacs/vendor")
+;(server-start)
+(add-to-list 'load-path "~/.emacs.d/")
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/yas")
 
-(progn (cd "~/emacs/vendor")
-       (normal-top-level-add-subdirs-to-load-path))
-
-(require 'python)
-(require 'auto-complete)
+(require 'auto-complete-config)
 (require 'yasnippet)
+(autoload 'pymacs-apply "pymacs")
+(autoload 'pymacs-call "pymacs")
+(autoload 'pymacs-eval "pymacs" nil t)
+(autoload 'pymacs-exec "pymacs" nil t)
+(autoload 'pymacs-load "pymacs" nil t)
+(pymacs-load "ropemacs" "rope-")
+(setq ropemacs-enable-autoimport t)
 
-
-(autoload 'python-mode "python-mode" "Python Mode." t)
+(add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
+(ac-config-default)
+(global-auto-complete-mode t)
+;(setq ac-ropemacs-loaded 't)
+(setq ac-auto-show-menu 't)
+(setq ac-delay '0.01)
+(setq ac-comphist-threshold '0.85)
+;(autoload 'python-mode "python-mode" "Python Mode." t)
 (add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
 (add-to-list 'interpreter-mode-alist '("python" . python-mode))
 
-;; Initialize Pymacs                                  
-;(autoload 'pymacs-apply "pymacs")
-;(autoload 'pymacs-call "pymacs")
-;(autoload 'pymacs-eval "pymacs" nil t)
-;(autoload 'pymacs-exec "pymacs" nil t)
-;(autoload 'pymacs-load "pymacs" nil t)
-
-;; Initialize Rope
-;(pymacs-load "ropemacs" "rope-")
-;(setq ropemacs-enable-autoimport t)
-
-;; Initialize Yasnippet
-;; Don't map TAB to yasnippet
-;; In fact, set it to something we'll never use because
-;; we'll only ever trigger it indirectly.
-(setq yas/trigger-key (kbd "C-c <kp-multiply>"))
 (yas/initialize)
-(yas/load-directory "~/emacs/snippets/yasnippet/snippets")
+(yas/load-directory "/usr/share/emacs/site-lisp/yas/snippets")
 
-(require 'auto-complete)
-(global-auto-complete-mode t)
+(progn (cd "~/projects"))
+
+(require 'pymacs)
+(pymacs-load "ropemacs" "rope-")
+(setq ropemacs-confirm-saving 'nil)
+(global-set-key "\C-xrm" 'load-ropemacs)
 
 
-;; for fancy M-x
+(require 'org-install)
+(add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+(setq org-agenda-files (list "~/org/projects.org"))
+
+(setq org-return-follows-link t)
+(setq org-log-done t)
+
+;(define-key org-mode-map (kbd "RET") 'org-meta-return)
+;(define-key org-mode-map (kbd "<left>") 'org-metaleft)
+;(define-key org-mode-map (kbd "<right>") 'org-metaright)
+;(define-key org-mode-map (kbd "<" ) 'self-insert-command)
+
+
+(require 'magit)
+(defun magit-hook()
+  (magit-refresh-all)
+  )
+
+  
+;(add-hook 'after-save-hook 'magit-hook)
+
+;; for fancy M-x 
 (require 'smex)
 (smex-initialize)
 
-(require 'org)
 ;; Fancy line numbering
-
 (require 'linum)
 (global-linum-mode 1)
 
 ;; Ido mode
+;(define-key map [remap find-file] 'find-file-new-tab)
 (require 'ido)
-
 (ido-mode t)
-
 (setq ido-enable-flex-matching t)
 (setq ido-execute-command-cache nil)
 
@@ -67,18 +79,6 @@
     (define-key ido-completion-map [tab] 'ido-complete)
   )
 )
-
-;; Git!
-(require 'git-emacs)
-;; Yasnippet
-
-
-
-(require 'yasnippet)
-(yas/initialize)
-(yas/load-directory "~/emacs/snippets/yasnippet/snippets")
-
-
 
 ;; i like to close emacs randomly!
 (setq confirm-kill-emacs
@@ -95,16 +95,14 @@
 ;; Show my parenthese
 (show-paren-mode t)
 
-
 (global-set-key (kbd "<mouse-8>") 'previous-buffer)
 (global-set-key (kbd "<mouse-9>") 'next-buffer)
 
-
 (global-set-key [f1] 'help)
 (global-set-key [f2] 'rope-rename)
+(global-set-key [f3] 'goto-line)
 (global-set-key [f9] 'compile)
 (global-set-key [f12] 'toggle-truncate-lines)
-
 
 (global-set-key "\C-j" 'indent-region)
 (global-set-key "\C-x\C-k" 'kill-buffer)
@@ -113,27 +111,28 @@
 (global-set-key (kbd "M-X") 'smex-major-mode-commands)
 (global-set-key (kbd "C-c M-x") 'smex-update-and-run)
 
-;; This is your old M-x.
-(global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
+
 ;; Happy git!
-(global-set-key (kbd "C-x c") 'git-commit-all)
+;(global-set-key (kbd "C-x c") 'git-commit-all)
+
 ;; Have a menu for all your previous kills
-(global-set-key "\C-cy" '(lambda ()
-                                 (interactive)
-                                 (popup-menu 'yank-menu)))
+(global-set-key "\C-c y" '(lambda ()
+						  (interactive)
+						  (popup-menu 'yank-menu)))
 
 ;; Get rid of funky gui features
 (setq x-select-enable-clipboard t)       ;; use the X copy/paste
-(scroll-bar-mode t)                      ;; show a scrollbar...
-(set-scroll-bar-mode 'right)             ;; on the right
+(scroll-bar-mode nil)                      ;; show a scrollbar...
+;(set-scroll-bar-mode 'right)             ;; on the right
 (global-font-lock-mode t)                ;; always do syntax highlighting 
 (setq require-final-newline t)           ;; end files with a newline
 
 ;; Custom options
+(global-set-key "\C-w" 'backward-kill-word)
 (define-key minibuffer-local-map [tab] 'minibuffer-complete)
-(setq org-agenda-files (quote ("~/projects/org/projects.org")))
+;(setq org-agenda-files (quote ("~/projects/org/projects.org")))
 ;; File type list
-(add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+;(add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 (add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
 (add-to-list 'interpreter-mode-alist '("python" . python-mode))
 (autoload 'octave-mode "octave-mod" nil t)
@@ -141,14 +140,19 @@
       (cons '("\\.m$" . octave-mode) auto-mode-alist))
 
 
+(require 'cython-mode)
+;(require 'git-emacs)
+(require 'auto-complete)
+
 (tool-bar-mode -1)
-;(menu-bar-mode -1)
+(menu-bar-mode -1)
 (toggle-scroll-bar -1)
 
 
 ;; CC-MODE modifiers
-(require 'cc-mode)
+
 (defun my-c++-mode-hook()
+  (require 'cc-mode)
   (require 'etags)
   (require 'xcscope)
   (setq cscope-do-not-update-database t)
@@ -163,13 +167,27 @@
   (setq c-syntactic-indentation nil)
 )
 ;; Auto Syntax Error Hightlight  
-(defun my-python-hook()
+(defun p-hook()
+  ;; Initialize Pymacs                                  
+  ;(autoload 'pymacs-apply "pymacs")
+  ;(autoload 'pymacs-call "pymacs")
+  ;(autoload 'pymacs-eval "pymacs" nil t)
+  ;(autoload 'pymacs-exec "pymacs" nil t)
+  ;(autoload 'pymacs-load "pymacs" nil t)
+  
+  ;; Initialize Rope
+  ;(pymacs-load "ropemacs" "rope-")
+  ;(setq ropemacs-enable-autoimport t)
+
   (require 'flymake)
   (setq c-subword-mode 1)
-  (indent-tabs-mode nil)
   (setq tab-width 4)
   (setq c-basic-offset 4)
+  (set-variable 'py-indent-offset 4)
+  (set-variable 'py-smart-indentation t)
+  (set-variable 'indent-tabs-mode nil)
   (when (load "flymake") t)
+
   (defun flymake-pyflakes-init()
     (let* ((temp-file (flymake-init-create-temp-buffer-copy  
               'flymake-create-temp-inplace))  
@@ -181,12 +199,15 @@
  	     '("\\.py\\'" flymake-pyflakes-init)
         )
      )
+
   )
+
 (defun flymake-python-load ()
   (interactive)
   (set (make-local-variable 'flymake-allowed-file-name-masks)
        flymake-python-allowed-file-name-masks)
-  (flymake-mode t))
+  (flymake-mode t)
+)
 
 (defvar flymake-python-allowed-file-name-masks '(("\\.py\\'" flymake-python-init)))
 (defvar flymake-python-pyflakes-executable "pyflakes")
@@ -194,35 +215,42 @@
 ;; CC-MODE hook
 (add-hook 'c-mode-common-hook 'my-c++-mode-hook)
 ;; Python mode hook
-(add-hook 'python-mode-hook 'my-python-hook)
+(add-hook 'python-mode-hook 'p-hook)
 
-(set-fontset-font (frame-parameter nil 'font)
-                   'han '("STHeiti" . "unicode-bmp"))
+
+
+
+
 ;; Many custom set variables
-(custom-set-variables 
+(custom-set-variables
   ;; custom-set-variables was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
  '(ecb-tree-indent 3)
  '(indent-tabs-mode nil)
- '(inhibit-startup-screen t))
+ '(inhibit-startup-screen t)
+ '(show-paren-mode t))
+(if (display-graphic-p)
+    (custom-set-faces
+     ;; custom-set-faces was added by Custom.
+     ;; If you edit it by hand, you could mess it up, so be careful.
+     ;; Your init file should contain only one such instance.
+     ;; If there is more than one, they won't work right.
+     '(default ((t (:stipple nil :background "#272822" :foreground 
+                             "#F8F8F2" :inverse-video nil :box nil :strike-through nil :overline nil 
+                             :underline nil :slant normal :weight normal :height 90 :width normal 
+                             :foundry "unknown" :family "Envy Code R"))))
 
-(custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(default ((t (:stipple nil :background "#272822" :foreground "#F8F8F2" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 120 :width normal))))
- '(cursor ((t (:background "#F8F8F2" :foreground "#272822"))))
- '(font-lock-comment-face ((((class color) (min-colors 88) (background dark)) (:foreground "#75715E"))))
- '(font-lock-function-name-face ((((class color) (min-colors 88) (background dark)) (:foreground "#A6E22E"))))
- '(font-lock-keyword-face ((((class color) (min-colors 88) (background dark)) (:foreground "#F92672"))))
- '(font-lock-preprocessor-face ((t (:inherit font-lock-builtin-face :foreground "#66d9ef"))))
- '(font-lock-string-face ((((class color) (min-colors 88) (background dark)) (:foreground "#E6DB74"))))
- '(font-lock-type-face ((((class color) (min-colors 88) (background dark)) (:foreground "#66d9ef"))))
- '(font-lock-variable-name-face ((((class color) (min-colors 88) (background dark)) (:foreground "#FD971F"))))
- '(region ((((class color) (min-colors 88) (background dark)) (:background "#49483E"))))
- '(show-paren-match ((((class color) (background dark)) (:background "#3E3D32")))))
+     '(cursor ((t (:background "#F8F8F2" :foreground "#272822"))))
+     '(font-lock-comment-face ((((class color) (min-colors 88) (background dark)) (:foreground "#75715E"))))
+     '(font-lock-function-name-face ((((class color) (min-colors 88) (background dark)) (:foreground "#A6E22E" :bold nil))))
+     '(font-lock-keyword-face ((((class color) (min-colors 88) (background dark)) (:foreground "#F92672" :bold nil))))
+     '(font-lock-preprocessor-face ((t (:inherit font-lock-builtin-face :foreground "#66d9ef"))))
+     '(font-lock-string-face ((((class color) (min-colors 88) (background dark)) (:foreground "#E6DB74"))))
+     '(font-lock-type-face ((((class color) (min-colors 88) (background dark)) (:foreground "#66d9ef"))))
+     '(font-lock-variable-name-face ((((class color) (min-colors 88) (background dark)) (:foreground "#FD971F"))))
+     '(region ((((class color) (min-colors 88) (background dark)) (:background "#49483E"))))
+     '(show-paren-match ((((class color) (background dark)) (:background "#3E3D32"))))))
 
 
